@@ -51,6 +51,7 @@ __global__ void rasterize_to_pixels_fwd_kernel(
     render_colors += camera_id * image_height * image_width * COLOR_DIM;
     render_alphas += camera_id * image_height * image_width;
     last_ids += camera_id * image_height * image_width;
+    n_contrib += camera_id * image_height * image_width;
     if (backgrounds != nullptr) {
         backgrounds += camera_id * COLOR_DIM;
     }
