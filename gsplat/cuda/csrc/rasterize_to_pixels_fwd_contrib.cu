@@ -13,7 +13,7 @@ namespace cg = cooperative_groups;
  ****************************************************************************/
 
 template <uint32_t COLOR_DIM, typename S>
-__global__ void rasterize_to_pixels_fwd_kernel(
+__global__ void rasterize_to_pixels_fwd_kernel_with_contrib(
     const uint32_t C,
     const uint32_t N,
     const uint32_t n_isects,
@@ -191,7 +191,7 @@ __global__ void rasterize_to_pixels_fwd_kernel(
 }
 
 template <uint32_t CDIM>
-std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> call_kernel_with_dim(
+std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> call_kernel_with_dim_with_contrib(
     // Gaussian parameters
     const torch::Tensor &means2d,   // [C, N, 2] or [nnz, 2]
     const torch::Tensor &conics,    // [C, N, 3] or [nnz, 3]
@@ -261,7 +261,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> call_kern
     // channels into the kernel functions and avoid necessary global memory
     // writes. This requires moving the channel padding from python to C side.
     if (cudaFuncSetAttribute(
-            rasterize_to_pixels_fwd_kernel<CDIM, float>,
+            rasterize_to_pixels_fwd_kernel_with_contrib<CDIM, float>,
             cudaFuncAttributeMaxDynamicSharedMemorySize,
             shared_mem
         ) != cudaSuccess) {
@@ -271,7 +271,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> call_kern
             " bytes), try lowering tile_size."
         );
     }
-    rasterize_to_pixels_fwd_kernel<CDIM, float>
+    rasterize_to_pixels_fwd_kernel_with_contrib<CDIM, float>
         <<<blocks, threads, shared_mem, stream>>>(
             C,
             N,
@@ -323,7 +323,7 @@ rasterize_to_pixels_fwd_tensor_with_contrib(
 
 #define __GS__CALL_(N)                                                         \
     case N:                                                                    \
-        return call_kernel_with_dim<N>(                                        \
+        return call_kernel_with_dim_with_contrib<N>(                                        \
             means2d,                                                           \
             conics,                                                            \
             colors,                                                            \
