@@ -248,7 +248,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Te
     torch::Tensor has_hit_any_pixels = torch::zeros(
         {C, N}, means2d.options().dtype(torch::kBool)
     );
-    torch::Tensor n_contrib = torch::empty(
+    torch::Tensor n_contrib = torch::zeros(
         {C, image_height, image_width}, means2d.options().dtype(torch::kInt32)
     );
 
