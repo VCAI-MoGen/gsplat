@@ -291,10 +291,11 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> call_kern
             renders.data_ptr<float>(),
             alphas.data_ptr<float>(),
             last_ids.data_ptr<int32_t>(),
-            has_hit_any_pixels.data_ptr<bool>()
+            has_hit_any_pixels.data_ptr<bool>(),
+            n_contrib.data_ptr<int32_t>()
         );
 
-    return std::make_tuple(renders, alphas, last_ids, has_hit_any_pixels);
+    return std::make_tuple(renders, alphas, last_ids, has_hit_any_pixels, n_contrib);
 }
 
 std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>
