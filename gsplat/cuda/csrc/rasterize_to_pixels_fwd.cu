@@ -248,6 +248,9 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> call_kern
     torch::Tensor has_hit_any_pixels = torch::zeros(
         {C, N}, means2d.options().dtype(torch::kBool)
     );
+    torch::Tensor n_contrib = torch::empty(
+        {C, image_height, image_width}, means2d.options().dtype(torch::kInt32)
+    );
 
     at::cuda::CUDAStream stream = at::cuda::getCurrentCUDAStream();
     const uint32_t shared_mem =
