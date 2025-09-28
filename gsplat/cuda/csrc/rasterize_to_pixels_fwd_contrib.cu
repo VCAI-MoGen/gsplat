@@ -302,7 +302,7 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Te
 }
 
 std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>
-rasterize_to_pixels_fwd_tensor_with_contrib(
+rasterize_to_pixels_fwd_with_contrib_tensor(
     // Gaussian parameters
     const torch::Tensor &means2d,   // [C, N, 2] or [nnz, 2]
     const torch::Tensor &conics,    // [C, N, 3] or [nnz, 3]
