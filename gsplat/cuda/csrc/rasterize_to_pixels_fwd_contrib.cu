@@ -34,7 +34,8 @@ __global__ void rasterize_to_pixels_fwd_kernel(
     S *__restrict__ render_colors, // [C, image_height, image_width, COLOR_DIM]
     S *__restrict__ render_alphas, // [C, image_height, image_width, 1]
     int32_t *__restrict__ last_ids, // [C, image_height, image_width]
-    bool *__restrict__ has_hit_any_pixels // [C, N]
+    bool *__restrict__ has_hit_any_pixels, // [C, N]
+    int32_t *__restrict__ n_contrib // [C, image_height, image_width] # VCAI
 ) {
     // each thread draws one pixel, but also timeshares caching gaussians in a
     // shared tile
@@ -50,6 +51,7 @@ __global__ void rasterize_to_pixels_fwd_kernel(
     render_colors += camera_id * image_height * image_width * COLOR_DIM;
     render_alphas += camera_id * image_height * image_width;
     last_ids += camera_id * image_height * image_width;
+    n_contrib += camera_id * image_height * image_width;
     if (backgrounds != nullptr) {
         backgrounds += camera_id * COLOR_DIM;
     }
@@ -166,6 +168,7 @@ __global__ void rasterize_to_pixels_fwd_kernel(
             has_hit_any_pixels[g] = true;
 
             T = next_T;
+            n_contrib[pix_id] += 1;
         }
     }
 
@@ -245,6 +248,9 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> call_kern
     torch::Tensor has_hit_any_pixels = torch::zeros(
         {C, N}, means2d.options().dtype(torch::kBool)
     );
+    torch::Tensor n_contrib = torch::empty(
+        {C, image_height, image_width}, means2d.options().dtype(torch::kInt32)
+    );
 
     at::cuda::CUDAStream stream = at::cuda::getCurrentCUDAStream();
     const uint32_t shared_mem =
@@ -288,14 +294,15 @@ std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor> call_kern
             renders.data_ptr<float>(),
             alphas.data_ptr<float>(),
             last_ids.data_ptr<int32_t>(),
-            has_hit_any_pixels.data_ptr<bool>()
+            has_hit_any_pixels.data_ptr<bool>(),
+            n_contrib.data_ptr<int32_t>()
         );
 
-    return std::make_tuple(renders, alphas, last_ids, has_hit_any_pixels);
+    return std::make_tuple(renders, alphas, last_ids, has_hit_any_pixels, n_contrib);
 }
 
-std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>
-rasterize_to_pixels_fwd_tensor(
+std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>
+rasterize_to_pixels_fwd_tensor_with_contrib(
     // Gaussian parameters
     const torch::Tensor &means2d,   // [C, N, 2] or [nnz, 2]
     const torch::Tensor &conics,    // [C, N, 3] or [nnz, 3]
