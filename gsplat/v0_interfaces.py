@@ -144,8 +144,8 @@ class _RasterizeToPixels(torch.autograd.Function):
         flatten_ids: Tensor,  # [n_isects]
         absgrad: bool,
     ) -> Tuple[Tensor, Tensor]:
-        render_colors, render_alphas, last_ids, has_hit_any_pixels = wrapper._make_lazy_cuda_func(
-            "rasterize_to_pixels_fwd"
+        render_colors, render_alphas, last_ids, has_hit_any_pixels, n_contribs = wrapper._make_lazy_cuda_func(
+            "rasterize_to_pixels_fwd_with_contrib"
         )(
             means2d.unsqueeze(0),
             conics,
@@ -184,7 +184,7 @@ class _RasterizeToPixels(torch.autograd.Function):
 
         # double to float
         render_alphas = render_alphas.float()
-        return render_colors, render_alphas
+        return render_colors, render_alphas, n_contribs
 
     @staticmethod
     def backward(
