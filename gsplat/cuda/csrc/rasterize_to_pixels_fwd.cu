@@ -35,6 +35,7 @@ __global__ void rasterize_to_pixels_fwd_kernel(
     S *__restrict__ render_alphas, // [C, image_height, image_width, 1]
     int32_t *__restrict__ last_ids, // [C, image_height, image_width]
     bool *__restrict__ has_hit_any_pixels // [C, N]
+    int32_t *__restrict__ n_contrib, // [C, image_height, image_width] # VCAI
 ) {
     // each thread draws one pixel, but also timeshares caching gaussians in a
     // shared tile
@@ -166,6 +167,7 @@ __global__ void rasterize_to_pixels_fwd_kernel(
             has_hit_any_pixels[g] = true;
 
             T = next_T;
+            n_contrib[pix_id] += 1
         }
     }
 
