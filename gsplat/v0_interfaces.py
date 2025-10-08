@@ -184,13 +184,14 @@ class _RasterizeToPixels(torch.autograd.Function):
 
         # double to float
         render_alphas = render_alphas.float()
-        return render_colors, render_alphas# , n_contribs
+        return render_colors, render_alphas, n_contribs
 
     @staticmethod
     def backward(
         ctx,
         v_render_colors: Tensor,  # [C, H, W, 3]
         v_render_alphas: Tensor,  # [C, H, W, 1]
+        v_n_contribs:   Tensor
     ):
         (
             means2d,
