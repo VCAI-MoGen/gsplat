@@ -184,7 +184,7 @@ class _RasterizeToPixels(torch.autograd.Function):
 
         # double to float
         render_alphas = render_alphas.float()
-        return render_colors, render_alphas, n_contribs
+        return render_colors, render_alphas# , n_contribs
 
     @staticmethod
     def backward(
